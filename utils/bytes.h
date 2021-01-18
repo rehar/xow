@@ -43,6 +43,10 @@ public:
         std::initializer_list<uint8_t> elements
     ) : data(elements) {}
 
+    inline Bytes (
+    	size_t elements
+	) : data(elements) {}
+
     inline Bytes(
         const uint8_t *begin,
         const uint8_t *end

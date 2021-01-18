@@ -20,6 +20,10 @@
 #include "../utils/log.h"
 
 #include <chrono>
+#include <cstdio>
+#include <fstream>
+#include <cstring>
+#include <cerrno>
 
 #define BITS_PER_LONG (sizeof(long) * 8)
 #define BIT(nr) (1UL << (nr))
@@ -1450,10 +1454,32 @@ bool Mt76::loadFirmware()
     controlWrite(MT_FCE_PDMA_GLOBAL_CONF, 0x44);
     controlWrite(MT_FCE_SKIP_FS, 0x03);
 
-    const Bytes firmware(
-        _binary_firmware_bin_start,
-        _binary_firmware_bin_end
-    );
+    //read firmware binary from file system
+    std::fstream fwStream(FIRMWAREBIN, std::ios::in | std::ios::binary);
+
+    if (!fwStream.is_open()) {
+    	Log::error("Unable to open firmware: %s", strerror(errno));
+    	return false;
+    }
+
+    fwStream.seekg(0, std::ios::end);
+    size_t fwSize = fwStream.tellg();
+    fwStream.seekg(0, std::ios::beg);
+
+    if (fwSize > MAX_FIRMWARE_SIZE) {
+    	Log::error("Illegal firmware image");
+    	return false;
+    }
+
+    Bytes firmware(fwSize);
+
+    fwStream.read((char*) &firmware[0], fwSize);
+
+    if (!fwStream){
+    	Log::error("Unable to read firmware: %s", strerror(errno));
+    	return false;
+    }
+    //firmware read successfully
 
     const FwHeader *header = firmware.toStruct<FwHeader>();
     Bytes::Iterator ilmStart = firmware.begin() + sizeof(FwHeader);

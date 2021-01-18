@@ -59,6 +59,7 @@
 class Mt76
 {
 protected:
+	static constexpr size_t MAX_FIRMWARE_SIZE = 1024 * 1024; //limit maximum firmware binary to 1Mbyte
     enum Qsel
     {
         MT_QSEL_MGMT,
